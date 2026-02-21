@@ -7,8 +7,7 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     // Redirect to backend Google OAuth
-    window.location.href =
-      "https://reportbackend.forese.co.in/auth/google/callback";
+    window.location.href = "https://reportbackend.forese.co.in/auth/google";
   };
 
   return (
