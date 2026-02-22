@@ -31,7 +31,7 @@ export default function Login() {
           Mock Placements ’26
         </h2>
         <p className="text-center text-gray-500 mb-6 text-sm">
-          performance Report
+          Performance Report
         </p>
 
         {error && (
