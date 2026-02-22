@@ -28,10 +28,10 @@ export default function Login() {
 
         {/* Title */}
         <h2 className="text-xl font-bold text-center text-gray-900">
-          Mocks ’26
+          Mock Placements ’26
         </h2>
         <p className="text-center text-gray-500 mb-6 text-sm">
-          Performance Overview
+          performance Report
         </p>
 
         {error && (

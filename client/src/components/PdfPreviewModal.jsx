@@ -104,7 +104,9 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(26); // Increased size
       pdf.setTextColor(0, 0, 0);
-      pdf.text("Mocks '26", pageWidth / 2, currentY + 4, { align: "center" });
+      pdf.text("Mock Placements '26", pageWidth / 2, currentY + 4, {
+        align: "center",
+      });
       currentY += 10;
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(15); // Increased size
@@ -134,7 +136,7 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(30, 41, 59);
       pdf.text(
-        String(user.name || "-"),
+        String(user.name || "-").toUpperCase(),
         margin + 8 + labelWidth,
         currentY + 22,
       );
@@ -638,4 +640,3 @@ function ScoreTable({ header, rows, total }) {
     </div>
   );
 }
-
