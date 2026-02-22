@@ -27,7 +27,9 @@ router.get("/google/callback", (req, res, next) => {
       expiresIn: "1d",
     });
 
-    res.redirect(`https://report.forese.co.in/oauth-success?token=${token}`);
+    res.redirect(
+      `https://www.report.forese.co.in/oauth-success?token=${token}`,
+    );
   })(req, res, next);
 });
 
