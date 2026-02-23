@@ -10,6 +10,50 @@ import {
 const foreselogo = "/forese-logo.png";
 const svcelogo = "/svce-logo.png";
 
+/* ---------- SCALED WRAPPER ---------- */
+function ScaledPdfWrapper({ children }) {
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const A4_WIDTH_PX = 794; // 210mm at 96dpi
+
+    const observer = new ResizeObserver(([entry]) => {
+      const available = entry.contentRect.width;
+      const newScale = Math.min(1, (available - 32) / A4_WIDTH_PX);
+      setScale(newScale);
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        padding: "32px 0",
+      }}
+    >
+      <div
+        style={{
+          transformOrigin: "top center",
+          transform: `scale(${scale})`,
+          marginBottom: scale < 1 ? `calc((${scale} - 1) * 297mm)` : 0,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- MAIN MODAL ---------- */
 export default function PdfPreviewModal({ isOpen, onClose, user }) {
   const pdfRef = useRef(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -85,7 +129,6 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
         let svceW = 50;
         let svceH = 14;
         if (svceDims) {
-          // Convert px to mm (assuming 96 DPI: 1 px = 0.264583 mm)
           const pxToMm = 0.264583;
           svceW = svceDims.w * pxToMm;
           svceH = svceDims.h * pxToMm;
@@ -102,14 +145,14 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
       currentY = logoY + 28;
 
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(26); // Increased size
+      pdf.setFontSize(26);
       pdf.setTextColor(0, 0, 0);
       pdf.text("Mock Placements '26", pageWidth / 2, currentY + 4, {
         align: "center",
       });
       currentY += 10;
       pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(15); // Increased size
+      pdf.setFontSize(15);
       pdf.setTextColor(71, 85, 105);
       pdf.text("Performance Overview", pageWidth / 2, currentY, {
         align: "center",
@@ -118,18 +161,17 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
 
       pdf.setDrawColor(226, 232, 240);
       pdf.setFillColor(255, 255, 255);
-      pdf.roundedRect(margin, currentY, pageWidth - margin * 2, 42, 4, 4, "FD"); // Taller card
+      pdf.roundedRect(margin, currentY, pageWidth - margin * 2, 42, 4, 4, "FD");
 
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(10); // Slightly larger
+      pdf.setFontSize(10);
       pdf.setTextColor(30, 41, 59);
       pdf.text("STUDENT INFORMATION", margin + 6, currentY + 11);
 
-      pdf.setFontSize(11); // Larger text
+      pdf.setFontSize(11);
       pdf.setTextColor(100, 116, 139);
       const midPoint = pageWidth / 2;
 
-      // Info Row 1
       pdf.setFont("helvetica", "normal");
       pdf.text("Name:", margin + 8, currentY + 22);
       let labelWidth = pdf.getTextWidth("Name: ");
@@ -153,7 +195,6 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
         currentY + 22,
       );
 
-      // Info Row 2
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(100, 116, 139);
       pdf.text("Email:", margin + 8, currentY + 34);
@@ -181,7 +222,7 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
       currentY += 52;
 
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(15); // Larger size
+      pdf.setFontSize(15);
       pdf.setTextColor(30, 41, 59);
       pdf.text("General Aptitude", margin + 1, currentY);
       currentY += 6;
@@ -193,7 +234,6 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
         const footerH = 10;
         const tableH = headerH + rows.length * rowH + footerH;
 
-        // Outer Boarder (Rounded)
         pdf.setDrawColor(229, 231, 235);
         pdf.setLineWidth(0.2);
         pdf.roundedRect(margin, y, tableW, tableH, 3, 3, "S");
@@ -209,7 +249,7 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
 
         let rowY = y + headerH;
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(11.5); // Slightly larger
+        pdf.setFontSize(11.5);
         pdf.setTextColor(47, 85, 105);
 
         rows.forEach(([label, score, max]) => {
@@ -296,20 +336,10 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
       pdf.text(`${overall} / 100`, pageWidth / 2, currentY + 20, {
         align: "center",
       });
-      pdf.setTextColor(148, 163, 184);
-      pdf.setFontSize(7);
-      //pdf.text(`© 2026 SVCE • Mock Examination Report • Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 282, { align: "center" });
 
       pdf.save(`Mock_Report_${user.regNo}.pdf`);
     } catch (err) {
       console.error("PDF generation failed:", err);
-      console.error("Error details:", {
-        message: err.message,
-        stack: err.stack,
-        user: user ? { name: user.name, regno: user.regNo } : null,
-        foreseLoaded: !!foreseBase64,
-        svceLoaded: !!svceBase64,
-      });
       alert("Failed to generate PDF. Please try again.");
     } finally {
       setIsGenerating(false);
@@ -328,187 +358,194 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
         </div>
 
         {/* CONTENT */}
-        <div className="bg-gray-200/50 p-8 overflow-auto flex-1 flex justify-center">
-          <div
-            ref={pdfRef}
-            className="w-full sm:w-auto"
-            style={{
-              width: "210mm",
-              minHeight: "297mm",
-              backgroundColor: "#ffffff",
-              padding: "8mm 20mm 20mm 20mm",
-              boxSizing: "border-box",
-              boxShadow:
-                "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {/* LOGOS (Aligned and balanced) */}
+        <div className="bg-gray-200/50 overflow-auto flex-1">
+          <ScaledPdfWrapper>
             <div
+              ref={pdfRef}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "5mm",
-              }}
-            >
-              <img
-                src={foreseBase64 || foreselogo}
-                alt="Forese"
-                style={{ height: "16mm", width: "auto", objectFit: "contain" }}
-              />
-              <img
-                src={svceBase64 || svcelogo}
-                alt="SVCE"
-                style={{
-                  height: svceDims ? `${svceDims.h * 0.264583}mm` : "auto",
-                  width: svceDims ? `${svceDims.w * 0.264583}mm` : "auto",
-                  objectFit: "contain",
-                }}
-              />
-            </div>
-
-            {/* TITLE (TIGHTER) */}
-            <div style={{ textAlign: "center", marginBottom: 12 }}>
-              <h1
-                style={{
-                  fontSize: 26,
-                  fontWeight: 800,
-                  margin: 0,
-                  color: "#000000",
-                }}
-              >
-                Mock Placements ’26
-              </h1>
-              <p style={{ color: "#475569", marginTop: 2, fontSize: 13 }}>
-                Performance Overview
-              </p>
-            </div>
-
-            {/* STUDENT INFORMATION */}
-            <div
-              style={{
-                border: "1px solid #e2e8f0",
-                borderRadius: 12,
-                padding: "12px 20px",
-                marginBottom: 16,
+                width: "210mm",
+                minHeight: "297mm",
                 backgroundColor: "#ffffff",
-                boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                padding: "8mm 20mm 20mm 20mm",
+                boxSizing: "border-box",
+                boxShadow:
+                  "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
+              {/* LOGOS */}
               <div
                 style={{
                   display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  gap: 8,
-                  marginBottom: 16,
-                  color: "#000000",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  marginBottom: "5mm",
                 }}
               >
-                <IdentificationIcon
+                <img
+                  src={foreseBase64 || foreselogo}
+                  alt="Forese"
                   style={{
-                    width: 18,
-                    height: 18,
-                    marginTop: "1px",
-                    color: "#64748b",
+                    height: "16mm",
+                    width: "auto",
+                    objectFit: "contain",
                   }}
                 />
-                <span>Student Information</span>
+                <img
+                  src={svceBase64 || svcelogo}
+                  alt="SVCE"
+                  style={{
+                    height: svceDims ? `${svceDims.h * 0.264583}mm` : "auto",
+                    width: svceDims ? `${svceDims.w * 0.264583}mm` : "auto",
+                    objectFit: "contain",
+                  }}
+                />
               </div>
+
+              {/* TITLE */}
+              <div style={{ textAlign: "center", marginBottom: 12 }}>
+                <h1
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 800,
+                    margin: 0,
+                    color: "#000000",
+                  }}
+                >
+                  Mock Placements &apos;26
+                </h1>
+                <p style={{ color: "#475569", marginTop: 2, fontSize: 13 }}>
+                  Performance Overview
+                </p>
+              </div>
+
+              {/* STUDENT INFORMATION */}
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.2fr 0.8fr",
-                  gap: "10px 40px",
-                  fontSize: 13,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: "12px 20px",
+                  marginBottom: 16,
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 16,
+                    color: "#000000",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  <IdentificationIcon
+                    style={{
+                      width: 18,
+                      height: 18,
+                      marginTop: "1px",
+                      color: "#64748b",
+                    }}
+                  />
+                  <span>Student Information</span>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1.2fr 0.8fr",
+                    gap: "10px 40px",
+                    fontSize: 13,
+                    color: "#1e293b",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span style={{ color: "#64748b" }}>Name:</span>
+                    <span style={{ fontWeight: 700, color: "#1e293b" }}>
+                      {user.name.toUpperCase()}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span style={{ color: "#64748b" }}>Reg No:</span>
+                    <span style={{ fontWeight: 700, color: "#1e293b" }}>
+                      {user.regNo}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span style={{ color: "#64748b" }}>Email:</span>
+                    <span style={{ fontWeight: 700, color: "#1e293b" }}>
+                      {user.email}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span style={{ color: "#64748b" }}>Dept:</span>
+                    <span style={{ fontWeight: 700, color: "#1e293b" }}>
+                      {user.dept}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* TABLES */}
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
+                <Section
+                  icon={
+                    <ChartBarIcon
+                      style={{ width: 18, height: 18, color: "#64748b" }}
+                    />
+                  }
+                  title="Aptitude Scores"
+                >
+                  <AptitudeCard scores={aptitudeScores} total={totalApt} />
+                </Section>
+
+                <Section
+                  icon={
+                    <UsersIcon
+                      style={{ width: 18, height: 18, color: "#64748b" }}
+                    />
+                  }
+                  title="Group Discussion"
+                >
+                  <GDCard scores={gdScores} total={totalGD} />
+                </Section>
+              </div>
+
+              {/* OVERALL PERFORMANCE */}
+              <div
+                style={{
+                  marginTop: 16,
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
                   color: "#1e293b",
+                  padding: "14px",
+                  borderRadius: 12,
+                  textAlign: "center",
                 }}
               >
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ color: "#64748b" }}>Name:</span>
-                  <span style={{ fontWeight: 700, color: "#1e293b" }}>
-                    {user.name.toUpperCase()}
-                  </span>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.05em",
+                    color: "#64748b",
+                    marginBottom: 4,
+                  }}
+                >
+                  OVERALL PERFORMANCE
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ color: "#64748b" }}>Reg No:</span>
-                  <span style={{ fontWeight: 700, color: "#1e293b" }}>
-                    {user.regNo}
-                  </span>
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ color: "#64748b" }}>Email:</span>
-                  <span style={{ fontWeight: 700, color: "#1e293b" }}>
-                    {user.email}
-                  </span>
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ color: "#64748b" }}>Dept:</span>
-                  <span style={{ fontWeight: 700, color: "#1e293b" }}>
-                    {user.dept}
-                  </span>
+                <div style={{ fontSize: 32, fontWeight: 800 }}>
+                  {overall} / 100
                 </div>
               </div>
             </div>
-
-            {/* TABLES */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <Section
-                icon={
-                  <ChartBarIcon
-                    style={{ width: 18, height: 18, color: "#64748b" }}
-                  />
-                }
-                title="Aptitude Scores"
-              >
-                <AptitudeCard scores={aptitudeScores} total={totalApt} />
-              </Section>
-
-              <Section
-                icon={
-                  <UsersIcon
-                    style={{ width: 18, height: 18, color: "#64748b" }}
-                  />
-                }
-                title="Group Discussion"
-              >
-                <GDCard scores={gdScores} total={totalGD} />
-              </Section>
-            </div>
-
-            {/* OVERALL PERFORMANCE */}
-            <div
-              style={{
-                marginTop: 16,
-                border: "1px solid #e2e8f0",
-                background: "#f8fafc",
-                color: "#1e293b",
-                padding: "14px",
-                borderRadius: 12,
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.05em",
-                  color: "#64748b",
-                  marginBottom: 4,
-                }}
-              >
-                OVERALL PERFORMANCE
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 800 }}>
-                {overall} / 100
-              </div>
-            </div>
-          </div>
+          </ScaledPdfWrapper>
         </div>
 
         {/* FOOTER */}
