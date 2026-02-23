@@ -379,7 +379,7 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
                   color: "#000000",
                 }}
               >
-                Mocks ’26
+                Mock Placements ’26
               </h1>
               <p style={{ color: "#475569", marginTop: 2, fontSize: 13 }}>
                 Performance Overview
@@ -432,7 +432,7 @@ export default function PdfPreviewModal({ isOpen, onClose, user }) {
                 <div style={{ display: "flex", gap: 6 }}>
                   <span style={{ color: "#64748b" }}>Name:</span>
                   <span style={{ fontWeight: 700, color: "#1e293b" }}>
-                    {user.name}
+                    {user.name.toUpperCase()}
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
